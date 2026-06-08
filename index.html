@@ -2,9 +2,10 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>🤚 隔空跳一跳 </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>🤚 隔空跳一跳</title>
     <style>
+        * { box-sizing: border-box; }
         body {
             margin: 0;
             overflow: hidden;
@@ -22,81 +23,199 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-top: env(safe-area-inset-top, 20px);
+            padding-top: calc(env(safe-area-inset-top, 20px) + 10px);
         }
         .score-container {
             background: rgba(0,0,0,0.6);
             backdrop-filter: blur(8px);
             border-radius: 40px;
-            padding: 8px 20px;
-            margin-top: 20px;
+            padding: 6px 18px;
+            margin-top: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             border: 1px solid rgba(255,255,255,0.2);
         }
-        .score-label { color: rgba(255,255,255,0.7); font-size: 14px; letter-spacing: 1px; }
-        .score-value { color: #ffaa44; font-size: 48px; font-weight: 800; line-height: 1; text-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        .score-label { color: rgba(255,255,255,0.7); font-size: clamp(12px, 2.5vw, 14px); letter-spacing: 1px; }
+        .score-value { color: #ffaa44; font-size: clamp(32px, 8vw, 48px); font-weight: 800; line-height: 1; text-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+
+        /* 底部进度条和状态 */
+        .bottom-ui {
+            position: absolute;
+            bottom: calc(env(safe-area-inset-bottom, 20px) + 10px);
+            left: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            pointer-events: none;
+            z-index: 10;
+        }
         .power-bar-container {
-            position: absolute; bottom: 50px; left: 20px; right: 20px; height: 12px;
-            background: rgba(0,0,0,0.5); border-radius: 20px; overflow: hidden;
-            backdrop-filter: blur(4px); box-shadow: 0 0 0 1px rgba(255,255,255,0.2);
+            width: 80%;
+            max-width: 400px;
+            height: 12px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 20px;
+            overflow: hidden;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.2);
         }
         .power-bar-fill {
-            width: 0%; height: 100%;
+            width: 0%;
+            height: 100%;
             background: linear-gradient(90deg, #ffaa44, #ff6600);
-            border-radius: 20px; transition: width 0.03s linear;
+            border-radius: 20px;
+            transition: width 0.03s linear;
         }
         .status-text {
-            position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%);
-            text-align: center; color: white; font-size: 16px; font-weight: 500;
-            text-shadow: 0 1px 3px black; background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px); padding: 6px 18px; border-radius: 40px;
-            pointer-events: none; white-space: nowrap; font-family: monospace;
-            max-width: 90vw; overflow: hidden; text-overflow: ellipsis;
+            text-align: center;
+            color: white;
+            font-size: clamp(12px, 3vw, 16px);
+            font-weight: 500;
+            text-shadow: 0 1px 3px black;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            padding: 6px 20px;
+            border-radius: 40px;
+            white-space: nowrap;
+            max-width: 90vw;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
+
+        /* 启动按钮 */
         #start-btn {
-            position: absolute; bottom: 30%; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); color: white;
-            border: none; padding: 14px 32px; font-size: 20px; font-weight: bold;
-            border-radius: 50px; cursor: pointer; z-index: 20;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.2s;
-            border: 1px solid rgba(255,255,255,0.3); pointer-events: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(4px);
+            color: white;
+            border: none;
+            padding: clamp(12px, 2.5vw, 16px) clamp(24px, 5vw, 36px);
+            font-size: clamp(18px, 4vw, 22px);
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            z-index: 20;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.3);
+            pointer-events: auto;
+            transition: 0.2s;
         }
-        #start-btn:hover { background: #ffaa44; color: #1e2a3a; transform: translateX(-50%) scale(1.02); }
+        #start-btn:hover { background: #ffaa44; color: #1e2a3a; transform: translate(-50%, -50%) scale(1.02); }
         #start-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* 重置按钮 */
         #reset-btn {
-            position: absolute; top: 20px; right: 20px; width: 48px; height: 48px;
-            border-radius: 50%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
-            border: 1px solid rgba(255,255,255,0.3); color: white; font-size: 24px;
-            cursor: pointer; z-index: 20; display: flex; align-items: center; justify-content: center;
-            transition: all 0.3s ease; pointer-events: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            position: absolute;
+            top: calc(env(safe-area-inset-top, 20px) + 10px);
+            right: 15px;
+            width: clamp(42px, 8vw, 48px);
+            height: clamp(42px, 8vw, 48px);
+            border-radius: 50%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
         #reset-btn:hover { background: #ffaa44; color: black; transform: rotate(30deg); }
         #reset-btn.game-over-pos {
-            top: auto; bottom: 60px; right: auto; left: 50%; transform: translateX(-50%);
-            width: 36px; height: 36px; font-size: 20px; z-index: 30;
+            top: auto;
+            bottom: calc(env(safe-area-inset-bottom, 20px) + 80px);
+            right: auto;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            z-index: 30;
         }
+
+        /* 加载动画 */
+        .loading-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            z-index: 30;
+            pointer-events: none;
+        }
+        .loading-overlay.active { display: flex; }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.2);
+            border-top-color: #ffaa44;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text {
+            color: white;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: clamp(14px, 3vw, 16px);
+            white-space: nowrap;
+        }
+
         .debug-dist {
-            position: absolute; bottom: 20px; right: 20px; background: black; color: lime;
-            font-family: monospace; font-size: 12px; padding: 4px 8px; border-radius: 8px;
-            opacity: 0.7; pointer-events: none; z-index: 20;
-        }
-        @media (max-width: 600px) {
-            .score-value { font-size: 36px; }
-            .status-text { font-size: 12px; bottom: 80px; }
-            .power-bar-container { bottom: 30px; }
-            #reset-btn.game-over-pos { bottom: 50px; }
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: black;
+            color: lime;
+            font-family: monospace;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 6px;
+            opacity: 0.6;
+            pointer-events: none;
+            z-index: 20;
+            display: none; /* 手机上默认隐藏，如需调试可改为 block */
         }
     </style>
 </head>
 <body>
     <div id="game-ui">
-        <div class="score-container"><div class="score-label">当前得分</div><div class="score-value" id="scoreValue">0</div></div>
+        <div class="score-container">
+            <div class="score-label">当前得分</div>
+            <div class="score-value" id="scoreValue">0</div>
+        </div>
     </div>
-    <div class="power-bar-container"><div class="power-bar-fill" id="powerFill"></div></div>
-    <div class="status-text" id="statusMsg">🤚 点击下方按钮启动</div>
+
+    <div class="bottom-ui">
+        <div class="power-bar-container">
+            <div class="power-bar-fill" id="powerFill"></div>
+        </div>
+        <div class="status-text" id="statusMsg">🤚 点击下方按钮启动</div>
+    </div>
+
     <button id="start-btn">🎥 启动游戏 & 摄像头</button>
     <button id="reset-btn">⟳</button>
     <div class="debug-dist" id="debugDist">0.000</div>
+
+    <!-- 加载动画 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">正在加载手势识别…</div>
+    </div>
 
     <script type="importmap">
         {
@@ -111,7 +230,7 @@
         import * as THREE from 'three';
         import { HandLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 
-        // ---------- 音频管理器 (修复死亡音效) ----------
+        // ---------- 音频管理器 ----------
         class AudioManager {
             constructor() { this.audioCtx = null; this.enabled = false; }
             async init() {
@@ -142,7 +261,6 @@
             playSuccess() { this._playTone(880, 0.15, 0.2); }
             playMiss() { this._playTone(120, 0.25, 0.2); }
             playGameOver() { this._playTone(150, 0.5, 0.3); }
-            // ✅ 修复死亡坠落音效：提高频率、增大音量、延长时长
             playDeathFall() { this._playTone(120, 1.0, 0.7); }
         }
 
@@ -179,6 +297,7 @@
         const startBtn = document.getElementById('start-btn');
         const resetBtn = document.getElementById('reset-btn');
         const debugDistSpan = document.getElementById('debugDist');
+        const loadingOverlay = document.getElementById('loadingOverlay');
         let audio = new AudioManager();
 
         function updatePowerBar() { powerFill.style.width = (power * 100) + '%'; }
@@ -268,7 +387,6 @@
             updatePowerBar();
             audio.playMiss();
             audio.playGameOver();
-            // ✅ 直接播放强化后的死亡音效，无延迟
             audio.playDeathFall();
             setStatus("💀 游戏结束 点击重置 💀");
             moveResetBtnToGameOver();
@@ -409,20 +527,32 @@
         let gameStarted = false;
         startBtn.addEventListener('click', async () => {
             if(gameStarted) return;
-            startBtn.disabled = true; startBtn.innerText = "⏳ 启动中...";
+            startBtn.disabled = true;
+            startBtn.innerText = "⏳ 启动中...";
+            // 显示加载动画
+            loadingOverlay.classList.add('active');
             try {
-                await startHandTracking(); gameStarted = true; startBtn.style.display = 'none';
-                resetGame(); setStatus("🤏 捏住手指蓄力 → 张开跳跃");
+                await startHandTracking();
+                gameStarted = true;
+                startBtn.style.display = 'none';
+                resetGame();
+                setStatus("🤏 捏住手指蓄力 → 张开跳跃");
             } catch(err) {
-                console.error(err); setStatus("❌ 摄像头启动失败，请检查权限并刷新页面");
-                startBtn.disabled = false; startBtn.innerText = "🔄 重试"; startBtn.style.display = 'block';
+                console.error(err);
+                setStatus("❌ 摄像头启动失败，请检查权限并刷新页面");
+                startBtn.disabled = false;
+                startBtn.innerText = "🔄 重试";
+                startBtn.style.display = 'block';
+            } finally {
+                // 隐藏加载动画
+                loadingOverlay.classList.remove('active');
             }
         });
         resetBtn.addEventListener('click', () => { if(gameStarted) resetGame(); });
         window.addEventListener('resize', () => { camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
         document.addEventListener('touchmove', e => { if(e.target !== startBtn && e.target !== resetBtn) e.preventDefault(); }, {passive: false});
         initThree(); animate();
-        console.log('🤚 死亡音效已增强 — 120Hz 低吼，清晰可闻');
+        console.log('🤚 已适配手机 + 加载动画');
     </script>
 </body>
 </html>
