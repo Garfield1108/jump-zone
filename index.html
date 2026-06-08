@@ -520,7 +520,7 @@
             let delta = Math.min(0.033, (now-lastTime)/1000); if(delta<=0) delta = 0.016;
             lastTime = now; updatePhysics(delta);
             camera.position.x += ((player.x*0.4) - camera.position.x) * 0.06;
-            camera.lookAt(player.x, player.y*0.3, 0);
+           camera.lookAt(player.x, player.y * 0.5 + 0.2, 0);
             renderer.render(scene, camera);
             requestAnimationFrame(animate);
         }
